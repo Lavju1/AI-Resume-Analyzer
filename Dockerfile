@@ -40,6 +40,8 @@ ENV PATH="/opt/venv/bin:${PATH}"
 
 COPY --from=builder /opt/venv /opt/venv
 
+EXPOSE 8000
+
 USER app
 
-CMD ["python", "-c", "import ai_resume_analyzer; print('AI Resume Analyzer foundation image is ready.')"]
+CMD ["uvicorn", "ai_resume_analyzer.main:app", "--host", "0.0.0.0", "--port", "8000"]

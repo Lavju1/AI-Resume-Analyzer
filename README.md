@@ -2,28 +2,47 @@
 
 Production-grade foundation for an AI Resume Analyzer.
 
-Current scope: **Phase 1 only**. This repository contains project scaffolding, packaging, quality tooling, Docker support, CI, and documentation. It intentionally does not include business logic, APIs, authentication, or AI features.
+Current scope: **Phase 2 application foundation**. The repository now includes a FastAPI application shell with configuration, structured logging, request IDs, CORS, global exception handling, and a health endpoint.
+
+It intentionally does not include business logic, authentication, database models, resume analysis, scoring, or AI features.
 
 ## Project Structure
 
 ```text
 .
-├── .github/workflows/ci.yml
-├── config/
-├── docs/
-├── scripts/
-├── src/ai_resume_analyzer/
-├── tests/unit/
-├── .dockerignore
-├── .env.example
-├── .gitattributes
-├── .gitignore
-├── .pre-commit-config.yaml
-├── Dockerfile
-├── docker-compose.yml
-├── pyproject.toml
-└── README.md
+|-- .github/workflows/ci.yml
+|-- config/
+|-- docs/
+|-- scripts/
+|-- src/ai_resume_analyzer/
+|   |-- constants/
+|   |-- core/
+|   |-- exceptions/
+|   |-- middleware/
+|   |-- utils/
+|   |-- config.py
+|   |-- main.py
+|   |-- py.typed
+|   `-- __init__.py
+|-- tests/unit/
+|-- .dockerignore
+|-- .env.example
+|-- .gitattributes
+|-- .gitignore
+|-- .pre-commit-config.yaml
+|-- Dockerfile
+|-- docker-compose.yml
+|-- pyproject.toml
+`-- README.md
 ```
+
+## Application Foundation
+
+- `config.py` defines Pydantic Settings loaded from environment variables and optional `.env` files.
+- `core/logging.py` configures structured JSON logs with request ID correlation.
+- `middleware/request_id.py` reads or creates an `X-Request-ID` value and adds it to every HTTP response.
+- `exceptions/handlers.py` registers global handlers for HTTP errors, validation errors, and unhandled exceptions.
+- `main.py` creates the FastAPI app, registers CORS, middleware, exception handlers, and `/health`.
 
 ## Requirements
 
@@ -73,7 +92,7 @@ Build the runtime image:
 docker build -t ai-resume-analyzer:foundation .
 ```
 
-Run the foundation container:
+Run the FastAPI foundation container:
 
 ```bash
 docker compose up --build app
@@ -93,8 +112,8 @@ Copy `.env.example` to `.env` for local-only overrides:
 cp .env.example .env
 ```
 
-No secrets are required in Phase 1.
+No secrets are required in Phase 2.
 
 ## Phase Boundary
 
-Phase 1 stops at foundation setup. Future phases can add application modules, APIs, authentication, persistence, and AI features behind their own scoped implementation plans.
+Phase 2 stops at application infrastructure. Future phases can add domain modules, persistence, authentication, API resources, and AI features behind their own scoped implementation plans.

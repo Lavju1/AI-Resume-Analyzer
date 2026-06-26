@@ -1,0 +1,3 @@
+HEALTH_PATH = "/health"
+HEALTH_STATUS_OK = "ok"
+REQUEST_ID_HEADER = "X-Request-ID"
