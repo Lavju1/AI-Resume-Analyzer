@@ -18,9 +18,7 @@ def _error_payload(detail: Any) -> dict[str, Any]:
     return payload
 
 
-async def http_exception_handler(
-    request: Request, exc: Exception
-) -> JSONResponse:
+async def http_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     http_exc = cast(HTTPException, exc)
     logger.warning(
         "HTTP exception handled",
@@ -47,9 +45,7 @@ async def validation_exception_handler(
     )
 
 
-async def unhandled_exception_handler(
-    request: Request, exc: Exception
-) -> JSONResponse:
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.exception(
         "Unhandled exception",
         extra={"path": request.url.path},
