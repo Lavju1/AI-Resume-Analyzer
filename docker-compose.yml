@@ -1,0 +1,20 @@
+services:
+  app:
+    build:
+      context: .
+      target: runtime
+    image: ai-resume-analyzer:foundation
+    env_file:
+      - .env.example
+
+  test:
+    profiles:
+      - test
+    build:
+      context: .
+      target: development
+    image: ai-resume-analyzer:foundation-dev
+    env_file:
+      - .env.example
+    command:
+      - pytest
