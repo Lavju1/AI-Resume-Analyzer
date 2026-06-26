@@ -16,6 +16,7 @@ Current scope: **Phase 1 only**. This repository contains project scaffolding, p
 ├── tests/unit/
 ├── .dockerignore
 ├── .env.example
+├── .gitattributes
 ├── .gitignore
 ├── .pre-commit-config.yaml
 ├── Dockerfile
