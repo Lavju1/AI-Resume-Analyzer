@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from ai_resume_analyzer import __version__
+from ai_resume_analyzer.api.auth import router as auth_router
 from ai_resume_analyzer.config import Settings, get_settings
 from ai_resume_analyzer.constants.http import HEALTH_PATH, HEALTH_STATUS_OK
 from ai_resume_analyzer.core.logging import configure_logging
@@ -33,6 +34,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
 
     register_exception_handlers(app)
+    app.include_router(auth_router)
 
     @app.get(HEALTH_PATH, tags=["health"])
     async def health() -> dict[str, str]:
