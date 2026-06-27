@@ -5,6 +5,11 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ai_resume_analyzer.constants.logging import VALID_LOG_LEVELS
+from ai_resume_analyzer.constants.uploads import (
+    DEFAULT_ALLOWED_FILE_TYPES,
+    DEFAULT_MAX_UPLOAD_SIZE_MB,
+    DEFAULT_UPLOAD_DIRECTORY,
+)
 
 AppEnvironment = Literal["development", "test", "staging", "production"]
 
@@ -35,6 +40,12 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = Field(default=30, ge=1)
 
+    upload_directory: str = DEFAULT_UPLOAD_DIRECTORY
+    max_upload_size_mb: int = Field(default=DEFAULT_MAX_UPLOAD_SIZE_MB, ge=1)
+    allowed_file_types: list[str] = Field(
+        default_factory=lambda: list(DEFAULT_ALLOWED_FILE_TYPES)
+    )
+
     request_id_header: str = "X-Request-ID"
 
     cors_allow_origins: list[str] = Field(
@@ -63,6 +74,27 @@ class Settings(BaseSettings):
             msg = "JWT_SECRET_KEY must not be empty"
             raise ValueError(msg)
         return value
+
+    @field_validator("upload_directory")
+    @classmethod
+    def normalize_upload_directory(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            msg = "UPLOAD_DIRECTORY must not be empty"
+            raise ValueError(msg)
+        return normalized.rstrip("/\\")
+
+    @field_validator("allowed_file_types")
+    @classmethod
+    def normalize_allowed_file_types(cls, value: list[str]) -> list[str]:
+        normalized = [content_type.strip().lower() for content_type in value]
+        allowed_file_types = [
+            content_type for content_type in normalized if content_type
+        ]
+        if not allowed_file_types:
+            msg = "ALLOWED_FILE_TYPES must contain at least one content type"
+            raise ValueError(msg)
+        return allowed_file_types
 
 
 @lru_cache

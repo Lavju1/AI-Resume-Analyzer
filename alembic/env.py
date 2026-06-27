@@ -14,6 +14,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
 
 from ai_resume_analyzer.config import get_settings
 from ai_resume_analyzer.database.base import Base
+from ai_resume_analyzer.database.models import resume  # noqa: F401
 from ai_resume_analyzer.database.models import user  # noqa: F401
 
 config = context.config

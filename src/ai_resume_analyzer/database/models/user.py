@@ -1,7 +1,12 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Boolean, String, text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ai_resume_analyzer.database.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from ai_resume_analyzer.database.models.resume import Resume
 
 
 class User(BaseModel):
@@ -21,4 +26,8 @@ class User(BaseModel):
         nullable=False,
         default=True,
         server_default=text("true"),
+    )
+    resumes: Mapped[list["Resume"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
