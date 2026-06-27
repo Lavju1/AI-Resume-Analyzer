@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     database_pool_timeout: int = Field(default=30, ge=1)
     database_pool_recycle: int = Field(default=1800, ge=1)
 
+    jwt_secret_key: str = "change-me-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = Field(default=30, ge=1)
+
     request_id_header: str = "X-Request-ID"
 
     cors_allow_origins: list[str] = Field(
@@ -51,6 +55,14 @@ class Settings(BaseSettings):
             msg = f"LOG_LEVEL must be one of: {valid_levels}"
             raise ValueError(msg)
         return normalized
+
+    @field_validator("jwt_secret_key")
+    @classmethod
+    def validate_jwt_secret_key(cls, value: str) -> str:
+        if not value.strip():
+            msg = "JWT_SECRET_KEY must not be empty"
+            raise ValueError(msg)
+        return value
 
 
 @lru_cache
