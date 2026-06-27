@@ -2,7 +2,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from ai_resume_analyzer.auth.dependencies import get_auth_service
+from ai_resume_analyzer.auth.dependencies import get_auth_service, get_current_user
+from ai_resume_analyzer.database.models.user import User
 from ai_resume_analyzer.schemas.auth import Token, UserLogin, UserRead, UserRegister
 from ai_resume_analyzer.services.auth_service import (
     AuthService,
@@ -49,3 +50,14 @@ async def login_user(
             detail="Invalid credentials",
             headers={"WWW-Authenticate": "Bearer"},
         ) from exc
+
+
+@router.get(
+    "/me",
+    response_model=UserRead,
+    status_code=status.HTTP_200_OK,
+)
+async def read_current_user(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> UserRead:
+    return UserRead.model_validate(current_user)
