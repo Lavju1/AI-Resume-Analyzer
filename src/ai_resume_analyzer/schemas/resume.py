@@ -4,6 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from ai_resume_analyzer.extractors.schemas import ResumeData
+from ai_resume_analyzer.feedback.schemas import ResumeFeedback
 from ai_resume_analyzer.scoring.schemas import ATSScore
 
 
@@ -31,3 +32,4 @@ class ResumeUploadResponse(BaseModel):
     parsed_text: str
     extracted_data: ResumeData
     ats_score: ATSScore
+    feedback: ResumeFeedback
