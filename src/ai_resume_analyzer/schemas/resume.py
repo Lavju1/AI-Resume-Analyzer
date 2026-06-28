@@ -21,3 +21,8 @@ class ResumeRead(BaseModel):
     upload_status: str
     created_at: datetime
     updated_at: datetime
+
+
+class ResumeUploadResponse(BaseModel):
+    resume: ResumeRead
+    parsed_text: str

@@ -25,8 +25,9 @@ from ai_resume_analyzer.constants.uploads import (
 )
 from ai_resume_analyzer.database.models.user import User
 from ai_resume_analyzer.database.session import get_db
+from ai_resume_analyzer.parsers import ResumeParserError, ResumeParserService
 from ai_resume_analyzer.repositories.resume_repository import ResumeRepository
-from ai_resume_analyzer.schemas.resume import ResumeRead
+from ai_resume_analyzer.schemas.resume import ResumeRead, ResumeUploadResponse
 from ai_resume_analyzer.utils.uploads import (
     FileSizeExceededError,
     UnsupportedFileTypeError,
@@ -60,6 +61,10 @@ def get_resume_repository(
     session: Annotated[AsyncSession, Depends(get_db)],
 ) -> ResumeRepository:
     return ResumeRepository(session=session)
+
+
+def get_resume_parser_service() -> ResumeParserService:
+    return ResumeParserService()
 
 
 def _normalize_original_filename(filename: str | None) -> str:
@@ -190,15 +195,19 @@ async def _save_upload_file(
 
 @router.post(
     "/upload",
-    response_model=ResumeRead,
+    response_model=ResumeUploadResponse,
     status_code=status.HTTP_201_CREATED,
 )
 async def upload_resume(
     file: Annotated[UploadFile, File(...)],
     current_user: Annotated[User, Depends(get_current_user)],
     resume_repository: Annotated[ResumeRepository, Depends(get_resume_repository)],
+    resume_parser_service: Annotated[
+        ResumeParserService,
+        Depends(get_resume_parser_service),
+    ],
     settings: Annotated[Settings, Depends(get_settings)],
-) -> ResumeRead:
+) -> ResumeUploadResponse:
     content_type = (file.content_type or "").strip().lower()
 
     try:
@@ -215,6 +224,18 @@ async def upload_resume(
         )
     except UploadValidationError as exc:
         raise _validation_http_exception(exc) from exc
+
+    try:
+        parsed_text = await resume_parser_service.parse_resume(
+            stored_upload.storage_path
+        )
+    except ResumeParserError as exc:
+        await resume_repository.session.rollback()
+        _remove_file(stored_upload.storage_path)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
 
     try:
         resume = await resume_repository.create_resume(
@@ -235,7 +256,10 @@ async def upload_resume(
             detail="Could not persist resume metadata",
         ) from exc
 
-    return ResumeRead.model_validate(resume)
+    return ResumeUploadResponse(
+        resume=ResumeRead.model_validate(resume),
+        parsed_text=parsed_text,
+    )
 
 
 @router.get(
