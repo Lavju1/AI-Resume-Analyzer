@@ -29,6 +29,7 @@ from ai_resume_analyzer.extractors import ResumeExtractionService
 from ai_resume_analyzer.parsers import ResumeParserError, ResumeParserService
 from ai_resume_analyzer.repositories.resume_repository import ResumeRepository
 from ai_resume_analyzer.schemas.resume import ResumeRead, ResumeUploadResponse
+from ai_resume_analyzer.scoring import ResumeScoringService
 from ai_resume_analyzer.utils.uploads import (
     FileSizeExceededError,
     UnsupportedFileTypeError,
@@ -70,6 +71,10 @@ def get_resume_parser_service() -> ResumeParserService:
 
 def get_resume_extraction_service() -> ResumeExtractionService:
     return ResumeExtractionService()
+
+
+def get_resume_scoring_service() -> ResumeScoringService:
+    return ResumeScoringService()
 
 
 def _normalize_original_filename(filename: str | None) -> str:
@@ -215,6 +220,10 @@ async def upload_resume(
         ResumeExtractionService,
         Depends(get_resume_extraction_service),
     ],
+    resume_scoring_service: Annotated[
+        ResumeScoringService,
+        Depends(get_resume_scoring_service),
+    ],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> ResumeUploadResponse:
     content_type = (file.content_type or "").strip().lower()
@@ -247,6 +256,7 @@ async def upload_resume(
         ) from exc
 
     extracted_data = resume_extraction_service.extract_resume_data(parsed_text)
+    ats_score = resume_scoring_service.score_resume(extracted_data)
 
     try:
         resume = await resume_repository.create_resume(
@@ -271,6 +281,7 @@ async def upload_resume(
         resume=ResumeRead.model_validate(resume),
         parsed_text=parsed_text,
         extracted_data=extracted_data,
+        ats_score=ats_score,
     )
 
 
