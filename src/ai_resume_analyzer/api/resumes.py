@@ -2,9 +2,17 @@ from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated, BinaryIO
-from uuid import uuid4
+from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    Response,
+    UploadFile,
+    status,
+)
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -82,6 +90,13 @@ def _validation_http_exception(exc: UploadValidationError) -> HTTPException:
 def _remove_file(path: Path) -> None:
     with suppress(OSError):
         path.unlink(missing_ok=True)
+
+
+def _not_found_exception() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Resume not found",
+    )
 
 
 def _validate_initial_upload_metadata(
@@ -221,3 +236,76 @@ async def upload_resume(
         ) from exc
 
     return ResumeRead.model_validate(resume)
+
+
+@router.get(
+    "",
+    response_model=list[ResumeRead],
+    status_code=status.HTTP_200_OK,
+)
+async def list_resumes(
+    current_user: Annotated[User, Depends(get_current_user)],
+    resume_repository: Annotated[ResumeRepository, Depends(get_resume_repository)],
+) -> list[ResumeRead]:
+    resumes = await resume_repository.get_all_by_user(current_user.id)
+    return [ResumeRead.model_validate(resume) for resume in resumes]
+
+
+@router.get(
+    "/{resume_id}",
+    response_model=ResumeRead,
+    status_code=status.HTTP_200_OK,
+)
+async def read_resume(
+    resume_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    resume_repository: Annotated[ResumeRepository, Depends(get_resume_repository)],
+) -> ResumeRead:
+    resume = await resume_repository.get_by_id_for_user(
+        resume_id=resume_id,
+        user_id=current_user.id,
+    )
+    if resume is None:
+        raise _not_found_exception()
+
+    return ResumeRead.model_validate(resume)
+
+
+@router.delete(
+    "/{resume_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_resume(
+    resume_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    resume_repository: Annotated[ResumeRepository, Depends(get_resume_repository)],
+) -> Response:
+    resume = await resume_repository.get_by_id_for_user(
+        resume_id=resume_id,
+        user_id=current_user.id,
+    )
+    if resume is None:
+        raise _not_found_exception()
+
+    storage_path = Path(resume.storage_path)
+    try:
+        storage_path.unlink()
+    except FileNotFoundError:
+        pass
+    except OSError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not delete resume file",
+        ) from exc
+
+    try:
+        await resume_repository.delete(resume)
+        await resume_repository.session.commit()
+    except SQLAlchemyError as exc:
+        await resume_repository.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not delete resume metadata",
+        ) from exc
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

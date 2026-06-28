@@ -43,14 +43,29 @@ class ResumeRepository(BaseRepository[Resume]):
         user_id: UUID,
         *,
         offset: int = 0,
-        limit: int = 100,
+        limit: int | None = None,
     ) -> list[Resume]:
         statement = (
             select(Resume)
             .where(Resume.user_id == user_id)
             .order_by(Resume.created_at.desc())
             .offset(offset)
-            .limit(limit)
         )
+        if limit is not None:
+            statement = statement.limit(limit)
+
         result = await self.session.scalars(statement)
         return list(result.all())
+
+    async def get_by_id_for_user(
+        self,
+        *,
+        resume_id: UUID,
+        user_id: UUID,
+    ) -> Resume | None:
+        statement = select(Resume).where(
+            Resume.id == resume_id,
+            Resume.user_id == user_id,
+        )
+        result = await self.session.scalars(statement)
+        return result.one_or_none()
