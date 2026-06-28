@@ -3,6 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ai_resume_analyzer.extractors.schemas import ResumeData
+
 
 class ResumeCreate(BaseModel):
     original_filename: str = Field(min_length=1, max_length=255)
@@ -26,3 +28,4 @@ class ResumeRead(BaseModel):
 class ResumeUploadResponse(BaseModel):
     resume: ResumeRead
     parsed_text: str
+    extracted_data: ResumeData

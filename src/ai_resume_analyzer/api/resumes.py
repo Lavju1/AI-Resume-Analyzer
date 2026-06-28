@@ -25,6 +25,7 @@ from ai_resume_analyzer.constants.uploads import (
 )
 from ai_resume_analyzer.database.models.user import User
 from ai_resume_analyzer.database.session import get_db
+from ai_resume_analyzer.extractors import ResumeExtractionService
 from ai_resume_analyzer.parsers import ResumeParserError, ResumeParserService
 from ai_resume_analyzer.repositories.resume_repository import ResumeRepository
 from ai_resume_analyzer.schemas.resume import ResumeRead, ResumeUploadResponse
@@ -65,6 +66,10 @@ def get_resume_repository(
 
 def get_resume_parser_service() -> ResumeParserService:
     return ResumeParserService()
+
+
+def get_resume_extraction_service() -> ResumeExtractionService:
+    return ResumeExtractionService()
 
 
 def _normalize_original_filename(filename: str | None) -> str:
@@ -206,6 +211,10 @@ async def upload_resume(
         ResumeParserService,
         Depends(get_resume_parser_service),
     ],
+    resume_extraction_service: Annotated[
+        ResumeExtractionService,
+        Depends(get_resume_extraction_service),
+    ],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> ResumeUploadResponse:
     content_type = (file.content_type or "").strip().lower()
@@ -237,6 +246,8 @@ async def upload_resume(
             detail=str(exc),
         ) from exc
 
+    extracted_data = resume_extraction_service.extract_resume_data(parsed_text)
+
     try:
         resume = await resume_repository.create_resume(
             user_id=current_user.id,
@@ -259,6 +270,7 @@ async def upload_resume(
     return ResumeUploadResponse(
         resume=ResumeRead.model_validate(resume),
         parsed_text=parsed_text,
+        extracted_data=extracted_data,
     )
 
 
