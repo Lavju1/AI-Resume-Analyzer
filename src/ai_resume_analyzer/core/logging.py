@@ -62,6 +62,3 @@ def configure_logging(settings: Settings) -> None:
     root_logger.handlers.clear()
     root_logger.addHandler(handler)
     root_logger.setLevel(settings.log_level)
-
-    logging.getLogger("uvicorn").handlers.clear()
-    logging.getLogger("uvicorn.access").handlers.clear()
