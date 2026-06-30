@@ -28,9 +28,19 @@ from ai_resume_analyzer.database.models.user import User
 from ai_resume_analyzer.database.session import get_db
 from ai_resume_analyzer.extractors import ResumeExtractionService
 from ai_resume_analyzer.feedback import ResumeFeedbackService
+from ai_resume_analyzer.job_matching import (
+    AIJobMatchingService,
+    JobDescription,
+    JobMatchingService,
+)
 from ai_resume_analyzer.parsers import ResumeParserError, ResumeParserService
 from ai_resume_analyzer.repositories.resume_repository import ResumeRepository
-from ai_resume_analyzer.schemas.resume import ResumeRead, ResumeUploadResponse
+from ai_resume_analyzer.schemas.resume import (
+    ResumeJobMatchRequest,
+    ResumeJobMatchResponse,
+    ResumeRead,
+    ResumeUploadResponse,
+)
 from ai_resume_analyzer.scoring import ResumeScoringService
 from ai_resume_analyzer.utils.uploads import (
     FileSizeExceededError,
@@ -85,6 +95,14 @@ def get_resume_feedback_service() -> ResumeFeedbackService:
 
 def get_ai_analysis_service() -> AIAnalysisService:
     return AIAnalysisService()
+
+
+def get_job_matching_service() -> JobMatchingService:
+    return JobMatchingService()
+
+
+def get_ai_job_matching_service() -> AIJobMatchingService:
+    return AIJobMatchingService()
 
 
 def _normalize_original_filename(filename: str | None) -> str:
@@ -326,6 +344,72 @@ async def list_resumes(
 ) -> list[ResumeRead]:
     resumes = await resume_repository.get_all_by_user(current_user.id)
     return [ResumeRead.model_validate(resume) for resume in resumes]
+
+
+@router.post(
+    "/job-match",
+    response_model=ResumeJobMatchResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def match_resume_to_job(
+    request: ResumeJobMatchRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    resume_repository: Annotated[ResumeRepository, Depends(get_resume_repository)],
+    resume_parser_service: Annotated[
+        ResumeParserService,
+        Depends(get_resume_parser_service),
+    ],
+    resume_extraction_service: Annotated[
+        ResumeExtractionService,
+        Depends(get_resume_extraction_service),
+    ],
+    job_matching_service: Annotated[
+        JobMatchingService,
+        Depends(get_job_matching_service),
+    ],
+    ai_job_matching_service: Annotated[
+        AIJobMatchingService,
+        Depends(get_ai_job_matching_service),
+    ],
+) -> ResumeJobMatchResponse:
+    resume = await resume_repository.get_by_id_for_user(
+        resume_id=request.resume_id,
+        user_id=current_user.id,
+    )
+    if resume is None:
+        raise _not_found_exception()
+
+    try:
+        parsed_text = await resume_parser_service.parse_resume(
+            Path(resume.storage_path)
+        )
+    except ResumeParserError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+
+    resume_data = resume_extraction_service.extract_resume_data(parsed_text)
+    job_description = JobDescription(text=request.job_description_text)
+    job_match = job_matching_service.match(
+        resume_data=resume_data,
+        job_description=job_description,
+    )
+    ai_analysis = await ai_job_matching_service.analyze_job_match(
+        parsed_text=parsed_text,
+        resume_data=resume_data,
+        job_description=job_description,
+        job_match=job_match,
+    )
+
+    return ResumeJobMatchResponse(
+        overall_match=job_match.overall_match,
+        matched_skills=job_match.matched_skills,
+        missing_skills=job_match.missing_skills,
+        matched_keywords=job_match.matched_keywords,
+        missing_keywords=job_match.missing_keywords,
+        ai_analysis=ai_analysis,
+    )
 
 
 @router.get(

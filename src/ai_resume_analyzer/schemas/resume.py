@@ -35,3 +35,17 @@ class ResumeUploadResponse(BaseModel):
     ats_score: ATSScore
     feedback: ResumeFeedback
     ai_analysis: AIAnalysis
+
+
+class ResumeJobMatchRequest(BaseModel):
+    resume_id: UUID
+    job_description_text: str = Field(min_length=1)
+
+
+class ResumeJobMatchResponse(BaseModel):
+    overall_match: float
+    matched_skills: list[str] = Field(default_factory=list)
+    missing_skills: list[str] = Field(default_factory=list)
+    matched_keywords: list[str] = Field(default_factory=list)
+    missing_keywords: list[str] = Field(default_factory=list)
+    ai_analysis: AIAnalysis
