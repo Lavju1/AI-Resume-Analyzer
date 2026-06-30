@@ -9,12 +9,8 @@ from ai_resume_analyzer.ai.exceptions import (
     AIProviderError,
 )
 from ai_resume_analyzer.ai.schemas import AIAnalysis
-from ai_resume_analyzer.extractors.schemas import ResumeData
-from ai_resume_analyzer.feedback.schemas import ResumeFeedback
-from ai_resume_analyzer.scoring.schemas import ATSScore
 
 DEFAULT_AI_SUMMARY = "No AI summary was returned."
-PLACEHOLDER_PROMPT = "Summarize this resume."
 
 
 class GeminiProvider(BaseAIProvider):
@@ -29,13 +25,10 @@ class GeminiProvider(BaseAIProvider):
     async def analyze_resume(
         self,
         *,
-        parsed_text: str,
-        extracted_data: ResumeData,
-        ats_score: ATSScore,
-        feedback: ResumeFeedback,
+        prompt: str,
     ) -> AIAnalysis:
         try:
-            response = await self._generate_content(self._build_prompt())
+            response = await self._generate_content(prompt)
         except AIProviderError:
             raise
         except Exception as exc:
@@ -47,9 +40,6 @@ class GeminiProvider(BaseAIProvider):
             weaknesses=[],
             recommendations=[],
         )
-
-    def _build_prompt(self) -> str:
-        return PLACEHOLDER_PROMPT
 
     async def _generate_content(self, prompt: str) -> object:
         genai = self._load_genai_module()
