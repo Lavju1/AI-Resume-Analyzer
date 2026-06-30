@@ -1,12 +1,23 @@
 from pydantic import BaseModel, Field
 
 
+class ATSCategoryScore(BaseModel):
+    score: int = Field(ge=0)
+    max_score: int = Field(gt=0)
+    feedback: str
+
+
 class ATSSectionScores(BaseModel):
-    contact: int = Field(ge=0, le=20)
-    skills: int = Field(ge=0, le=20)
-    education: int = Field(ge=0, le=20)
-    experience: int = Field(ge=0, le=20)
-    projects: int = Field(ge=0, le=20)
+    contact_information: ATSCategoryScore
+    professional_summary: ATSCategoryScore
+    skills: ATSCategoryScore
+    education: ATSCategoryScore
+    experience: ATSCategoryScore
+    projects: ATSCategoryScore
+    keywords: ATSCategoryScore
+    action_verbs: ATSCategoryScore
+    quantified_achievements: ATSCategoryScore
+    formatting: ATSCategoryScore
 
 
 class ATSScore(BaseModel):

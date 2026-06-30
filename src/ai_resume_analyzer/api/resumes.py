@@ -292,7 +292,10 @@ async def upload_resume(
         ) from exc
 
     extracted_data = resume_extraction_service.extract_resume_data(parsed_text)
-    ats_score = resume_scoring_service.score_resume(extracted_data)
+    ats_score = resume_scoring_service.score_resume(
+        extracted_data,
+        parsed_text=parsed_text,
+    )
     feedback = resume_feedback_service.generate_feedback(
         extracted_data=extracted_data,
         ats_score=ats_score,

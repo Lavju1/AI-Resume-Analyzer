@@ -1,69 +1,93 @@
-from collections.abc import Callable
-from dataclasses import dataclass
+import re
 
-from ai_resume_analyzer.extractors.schemas import ResumeData
-
-RULE_POINTS = 20
+CATEGORY_WEIGHTS = {
+    "contact_information": 10,
+    "professional_summary": 10,
+    "skills": 15,
+    "education": 10,
+    "experience": 20,
+    "projects": 15,
+    "keywords": 10,
+    "action_verbs": 5,
+    "quantified_achievements": 5,
+    "formatting": 10,
+}
 MAX_ATS_SCORE = 100
 
+ACTION_VERBS = {
+    "achieved",
+    "analyzed",
+    "architected",
+    "automated",
+    "built",
+    "collaborated",
+    "created",
+    "delivered",
+    "designed",
+    "developed",
+    "implemented",
+    "improved",
+    "increased",
+    "launched",
+    "led",
+    "managed",
+    "optimized",
+    "reduced",
+    "resolved",
+    "shipped",
+}
 
-@dataclass(frozen=True)
-class ATSRule:
-    section: str
-    is_satisfied: Callable[[ResumeData], bool]
-    strength: str
-    weakness: str
+ATS_KEYWORDS = {
+    "api",
+    "aws",
+    "azure",
+    "ci",
+    "cloud",
+    "css",
+    "database",
+    "deployment",
+    "docker",
+    "fastapi",
+    "git",
+    "html",
+    "java",
+    "javascript",
+    "kubernetes",
+    "linux",
+    "machine",
+    "microservices",
+    "node",
+    "postgresql",
+    "python",
+    "react",
+    "rest",
+    "sql",
+    "typescript",
+}
 
+SECTION_HEADINGS = {
+    "education",
+    "experience",
+    "professional experience",
+    "professional summary",
+    "profile",
+    "projects",
+    "skills",
+    "summary",
+    "technical skills",
+    "work experience",
+}
 
-def has_contact(data: ResumeData) -> bool:
-    return bool(data.email or data.phone)
+SUMMARY_HEADINGS = {
+    "career summary",
+    "objective",
+    "professional summary",
+    "profile",
+    "summary",
+}
 
-
-def has_skills(data: ResumeData) -> bool:
-    return bool(data.skills)
-
-
-def has_education(data: ResumeData) -> bool:
-    return bool(data.education)
-
-
-def has_experience(data: ResumeData) -> bool:
-    return bool(data.experience)
-
-
-def has_projects(data: ResumeData) -> bool:
-    return bool(data.projects)
-
-
-ATS_RULES = (
-    ATSRule(
-        section="contact",
-        is_satisfied=has_contact,
-        strength="Contact information is present.",
-        weakness="Missing contact information.",
-    ),
-    ATSRule(
-        section="skills",
-        is_satisfied=has_skills,
-        strength="Skills section is present.",
-        weakness="Missing skills section.",
-    ),
-    ATSRule(
-        section="education",
-        is_satisfied=has_education,
-        strength="Education section is present.",
-        weakness="Missing education section.",
-    ),
-    ATSRule(
-        section="experience",
-        is_satisfied=has_experience,
-        strength="Experience section is present.",
-        weakness="Missing experience section.",
-    ),
-    ATSRule(
-        section="projects",
-        is_satisfied=has_projects,
-        strength="Projects section is present.",
-        weakness="Missing projects section.",
-    ),
+KEYWORD_PATTERN = re.compile(r"[a-z0-9][a-z0-9+#.\-]*")
+QUANTIFIED_ACHIEVEMENT_PATTERN = re.compile(
+    r"(?<!\w)(?:\$?\d+(?:[,.]\d+)*(?:\+|%|x|k|m)?)(?!\w)",
+    re.IGNORECASE,
 )
