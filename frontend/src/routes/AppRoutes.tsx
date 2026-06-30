@@ -6,6 +6,7 @@ import { Dashboard } from "../pages/Dashboard";
 import { Login } from "../pages/Login";
 import { NotFound } from "../pages/NotFound";
 import { Register } from "../pages/Register";
+import { UploadResume } from "../pages/UploadResume";
 import { ProtectedRoute } from "./ProtectedRoute";
 
 export function AppRoutes() {
@@ -20,6 +21,7 @@ export function AppRoutes() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/resumes/upload" element={<UploadResume />} />
         </Route>
       </Route>
 

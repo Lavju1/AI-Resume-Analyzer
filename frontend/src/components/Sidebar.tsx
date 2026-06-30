@@ -9,6 +9,7 @@ export function Sidebar() {
       </div>
       <nav className="sidebar-nav">
         <NavLink to="/dashboard">Dashboard</NavLink>
+        <NavLink to="/resumes/upload">Upload Resume</NavLink>
       </nav>
     </aside>
   );
