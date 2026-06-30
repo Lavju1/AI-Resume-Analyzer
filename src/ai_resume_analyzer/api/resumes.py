@@ -16,6 +16,7 @@ from fastapi import (
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ai_resume_analyzer.ai import AIAnalysisService
 from ai_resume_analyzer.auth.dependencies import get_current_user
 from ai_resume_analyzer.config import Settings, get_settings
 from ai_resume_analyzer.constants.uploads import (
@@ -80,6 +81,10 @@ def get_resume_scoring_service() -> ResumeScoringService:
 
 def get_resume_feedback_service() -> ResumeFeedbackService:
     return ResumeFeedbackService()
+
+
+def get_ai_analysis_service() -> AIAnalysisService:
+    return AIAnalysisService()
 
 
 def _normalize_original_filename(filename: str | None) -> str:
@@ -233,6 +238,10 @@ async def upload_resume(
         ResumeFeedbackService,
         Depends(get_resume_feedback_service),
     ],
+    ai_analysis_service: Annotated[
+        AIAnalysisService,
+        Depends(get_ai_analysis_service),
+    ],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> ResumeUploadResponse:
     content_type = (file.content_type or "").strip().lower()
@@ -270,6 +279,12 @@ async def upload_resume(
         extracted_data=extracted_data,
         ats_score=ats_score,
     )
+    ai_analysis = await ai_analysis_service.analyze_resume(
+        parsed_text=parsed_text,
+        extracted_data=extracted_data,
+        ats_score=ats_score,
+        feedback=feedback,
+    )
 
     try:
         resume = await resume_repository.create_resume(
@@ -296,6 +311,7 @@ async def upload_resume(
         extracted_data=extracted_data,
         ats_score=ats_score,
         feedback=feedback,
+        ai_analysis=ai_analysis,
     )
 
 
