@@ -2,13 +2,19 @@ import type { AIAnalysis } from "../types/resume";
 
 type AIAnalysisCardProps = {
   aiAnalysis: AIAnalysis;
+  eyebrow?: string;
+  title?: string;
 };
 
-export function AIAnalysisCard({ aiAnalysis }: AIAnalysisCardProps) {
+export function AIAnalysisCard({
+  aiAnalysis,
+  eyebrow = "AI Analysis",
+  title = "Professional Summary",
+}: AIAnalysisCardProps) {
   return (
     <section className="panel analysis-card">
-      <p className="eyebrow">AI Analysis</p>
-      <h2>Professional Summary</h2>
+      <p className="eyebrow">{eyebrow}</p>
+      <h2>{title}</h2>
       <p className="analysis-summary">{aiAnalysis.summary}</p>
       <AnalysisList title="Strengths" items={aiAnalysis.strengths} />
       <AnalysisList title="Weaknesses" items={aiAnalysis.weaknesses} />

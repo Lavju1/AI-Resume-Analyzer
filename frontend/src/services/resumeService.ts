@@ -1,13 +1,18 @@
 import type { AxiosProgressEvent } from "axios";
 
 import { apiClient } from "../api/client";
-import type { ResumeUploadResponse } from "../types/resume";
+import type { ResumeRead, ResumeUploadResponse } from "../types/resume";
 
 type UploadResumeOptions = {
   onUploadProgress?: (event: AxiosProgressEvent) => void;
 };
 
 export const resumeService = {
+  async listResumes(): Promise<ResumeRead[]> {
+    const response = await apiClient.get<ResumeRead[]>("/resumes");
+    return response.data;
+  },
+
   async uploadResume(
     file: File,
     options: UploadResumeOptions = {},

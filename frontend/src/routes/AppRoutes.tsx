@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthLayout } from "../layouts/AuthLayout";
 import { MainLayout } from "../layouts/MainLayout";
 import { Dashboard } from "../pages/Dashboard";
+import { JobMatching } from "../pages/JobMatching";
 import { Login } from "../pages/Login";
 import { NotFound } from "../pages/NotFound";
 import { Register } from "../pages/Register";
@@ -22,6 +23,7 @@ export function AppRoutes() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/resumes/upload" element={<UploadResume />} />
+          <Route path="/job-matching" element={<JobMatching />} />
         </Route>
       </Route>
 

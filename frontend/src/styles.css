@@ -29,7 +29,9 @@ a:hover {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -114,6 +116,25 @@ input {
 .form-card input:focus {
   border-color: #2454c6;
   outline: 3px solid rgb(36 84 198 / 14%);
+}
+
+select,
+textarea {
+  border: 1px solid #cfd6e4;
+  border-radius: 8px;
+  color: #1c2430;
+  padding: 10px 12px;
+}
+
+select:focus,
+textarea:focus {
+  border-color: #2454c6;
+  outline: 3px solid rgb(36 84 198 / 14%);
+}
+
+textarea {
+  min-height: 180px;
+  resize: vertical;
 }
 
 .form-error {
@@ -251,6 +272,20 @@ input {
   margin-top: 20px;
 }
 
+.job-match-form {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.job-match-form label {
+  color: #344054;
+  display: grid;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 8px;
+}
+
 .file-picker {
   border: 1px dashed #a9b5c8;
   border-radius: 8px;
@@ -361,7 +396,17 @@ input {
   padding-left: 20px;
 }
 
+.match-list {
+  color: #475467;
+  margin: 0;
+  padding-left: 20px;
+}
+
 .analysis-list li + li {
+  margin-top: 6px;
+}
+
+.match-list li + li {
   margin-top: 6px;
 }
 
@@ -395,6 +440,15 @@ input {
 .severity-info {
   background: #eff8ff;
   color: #175cd3;
+}
+
+.empty-state {
+  background: #f7f8fb;
+  border: 1px solid #dde3ef;
+  border-radius: 8px;
+  color: #667085;
+  margin: 20px 0 0;
+  padding: 14px;
 }
 
 @media (max-width: 760px) {

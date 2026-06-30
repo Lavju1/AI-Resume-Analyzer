@@ -10,6 +10,7 @@ export function Sidebar() {
       <nav className="sidebar-nav">
         <NavLink to="/dashboard">Dashboard</NavLink>
         <NavLink to="/resumes/upload">Upload Resume</NavLink>
+        <NavLink to="/job-matching">Job Matching</NavLink>
       </nav>
     </aside>
   );
