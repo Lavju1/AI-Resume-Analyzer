@@ -48,6 +48,9 @@ class Settings(BaseSettings):
 
     request_id_header: str = "X-Request-ID"
 
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-1.5-flash"
+
     cors_allow_origins: list[str] = Field(
         default_factory=lambda: ["http://localhost:3000", "http://localhost:8000"]
     )
@@ -95,6 +98,23 @@ class Settings(BaseSettings):
             msg = "ALLOWED_FILE_TYPES must contain at least one content type"
             raise ValueError(msg)
         return allowed_file_types
+
+    @field_validator("gemini_api_key")
+    @classmethod
+    def normalize_gemini_api_key(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+    @field_validator("gemini_model")
+    @classmethod
+    def normalize_gemini_model(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            msg = "GEMINI_MODEL must not be empty"
+            raise ValueError(msg)
+        return normalized
 
 
 @lru_cache
