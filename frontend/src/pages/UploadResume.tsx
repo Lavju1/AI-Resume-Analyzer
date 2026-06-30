@@ -1,6 +1,9 @@
 import { AxiosError } from "axios";
 import { type ChangeEvent, type FormEvent, useState } from "react";
 
+import { AIAnalysisCard } from "../components/AIAnalysisCard";
+import { ATSScoreCard } from "../components/ATSScoreCard";
+import { ResumeFeedbackCard } from "../components/ResumeFeedbackCard";
 import { resumeService } from "../services/resumeService";
 import type { ResumeUploadResponse } from "../types/resume";
 
@@ -59,7 +62,7 @@ export function UploadResume() {
   }
 
   return (
-    <section className="dashboard-grid">
+    <section className="upload-page">
       <div className="panel upload-panel">
         <p className="eyebrow">Resume</p>
         <h2>Upload Resume</h2>
@@ -106,14 +109,40 @@ export function UploadResume() {
           </button>
         </form>
       </div>
+
+      {isUploading ? (
+        <div className="panel analysis-card">
+          <p className="eyebrow">Analysis</p>
+          <h2>Analyzing resume...</h2>
+          <p className="analysis-summary">
+            Your resume is being parsed and analyzed.
+          </p>
+        </div>
+      ) : null}
+
+      {uploadResult ? (
+        <div className="analysis-grid">
+          <ATSScoreCard atsScore={uploadResult.ats_score} />
+          <ResumeFeedbackCard feedback={uploadResult.feedback} />
+          <AIAnalysisCard aiAnalysis={uploadResult.ai_analysis} />
+        </div>
+      ) : null}
     </section>
   );
 }
 
 function getUploadErrorMessage(error: unknown): string {
   if (error instanceof AxiosError) {
-    const data = error.response?.data as BackendError | undefined;
-    if (data?.detail) {
+    const data = error.response?.data as BackendError | BackendError[] | undefined;
+
+    if (Array.isArray(data)) {
+      return data
+        .map((item) => item.detail)
+        .filter(Boolean)
+        .join(" ");
+    }
+
+    if (typeof data?.detail === "string") {
       return data.detail;
     }
   }
