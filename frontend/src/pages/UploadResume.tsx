@@ -1,30 +1,56 @@
 import { AxiosError } from "axios";
-import { type ChangeEvent, type FormEvent, useState } from "react";
+import {
+  type ChangeEvent,
+  type DragEvent,
+  type FormEvent,
+  useRef,
+  useState,
+} from "react";
+import { CheckCircle2, FileText, UploadCloud, XCircle } from "lucide-react";
 
 import { AIAnalysisCard } from "../components/AIAnalysisCard";
 import { ATSScoreCard } from "../components/ATSScoreCard";
 import { ResumeFeedbackCard } from "../components/ResumeFeedbackCard";
+import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card";
+import { LoadingState } from "../components/ui/LoadingState";
 import { resumeService } from "../services/resumeService";
 import type { ResumeUploadResponse } from "../types/resume";
 
+type ValidationIssue = {
+  msg?: string;
+};
+
 type BackendError = {
-  detail?: string;
+  detail?: string | ValidationIssue[];
 };
 
 export function UploadResume() {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState("");
   const [uploadResult, setUploadResult] =
     useState<ResumeUploadResponse | null>(null);
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
+    selectFile(file);
+  }
+
+  function selectFile(file: File | null) {
     setSelectedFile(file);
     setUploadProgress(0);
     setError("");
     setUploadResult(null);
+  }
+
+  function handleDrop(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    setIsDragging(false);
+    selectFile(event.dataTransfer.files?.[0] ?? null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -63,22 +89,46 @@ export function UploadResume() {
 
   return (
     <section className="upload-page">
-      <div className="panel upload-panel">
-        <p className="eyebrow">Resume</p>
-        <h2>Upload Resume</h2>
+      <Card className="upload-panel">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Resume</p>
+            <h2>Upload Resume</h2>
+          </div>
+          <UploadCloud aria-hidden="true" size={22} />
+        </div>
+        <p className="analysis-summary">
+          Drop in a PDF or DOCX resume and get ATS feedback plus AI analysis in
+          one pass.
+        </p>
+
         <form className="upload-form" onSubmit={handleSubmit}>
-          <label className="file-picker">
-            <span>Select PDF or DOCX file</span>
+          <label
+            className={isDragging ? "file-picker file-picker-active" : "file-picker"}
+            onDragLeave={() => setIsDragging(false)}
+            onDragOver={(event) => {
+              event.preventDefault();
+              setIsDragging(true);
+            }}
+            onDrop={handleDrop}
+          >
+            <span className="file-picker-icon">
+              <UploadCloud aria-hidden="true" size={26} />
+            </span>
+            <strong>Drag and drop your resume</strong>
+            <span>PDF or DOCX, up to the backend upload limit.</span>
             <input
               accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               disabled={isUploading}
+              ref={fileInputRef}
               onChange={handleFileChange}
               type="file"
             />
           </label>
 
           <div className="selected-file">
-            {selectedFile ? selectedFile.name : "No file selected"}
+            <FileText aria-hidden="true" size={18} />
+            <span>{selectedFile ? selectedFile.name : "No file selected"}</span>
           </div>
 
           {isUploading ? (
@@ -93,31 +143,39 @@ export function UploadResume() {
             </div>
           ) : null}
 
-          {error ? <p className="form-error">{error}</p> : null}
-
-          {uploadResult ? (
-            <p className="form-success">
-              {uploadResult.resume.original_filename} uploaded successfully.
+          {error ? (
+            <p className="form-error">
+              <XCircle aria-hidden="true" size={16} />
+              <span>{error}</span>
             </p>
           ) : null}
 
-          <button
-            className="button button-primary"
+          {uploadResult ? (
+            <p className="form-success">
+              <CheckCircle2 aria-hidden="true" size={16} />
+              <span>
+                {uploadResult.resume.original_filename} uploaded successfully.
+              </span>
+            </p>
+          ) : null}
+
+          <Button
             disabled={isUploading || !selectedFile}
+            icon={<UploadCloud aria-hidden="true" size={16} />}
+            isLoading={isUploading}
           >
-            {isUploading ? "Uploading..." : "Upload resume"}
-          </button>
+            Upload resume
+          </Button>
         </form>
-      </div>
+      </Card>
 
       {isUploading ? (
-        <div className="panel analysis-card">
-          <p className="eyebrow">Analysis</p>
-          <h2>Analyzing resume...</h2>
-          <p className="analysis-summary">
-            Your resume is being parsed and analyzed.
-          </p>
-        </div>
+        <Card className="analysis-card">
+          <LoadingState
+            description="Parsing the document, calculating ATS readiness, and preparing AI insights."
+            title="Analyzing resume"
+          />
+        </Card>
       ) : null}
 
       {uploadResult ? (
@@ -133,17 +191,17 @@ export function UploadResume() {
 
 function getUploadErrorMessage(error: unknown): string {
   if (error instanceof AxiosError) {
-    const data = error.response?.data as BackendError | BackendError[] | undefined;
-
-    if (Array.isArray(data)) {
-      return data
-        .map((item) => item.detail)
-        .filter(Boolean)
-        .join(" ");
-    }
+    const data = error.response?.data as BackendError | undefined;
 
     if (typeof data?.detail === "string") {
       return data.detail;
+    }
+
+    if (Array.isArray(data?.detail)) {
+      return data.detail
+        .map((issue) => issue.msg)
+        .filter(Boolean)
+        .join(" ");
     }
   }
 

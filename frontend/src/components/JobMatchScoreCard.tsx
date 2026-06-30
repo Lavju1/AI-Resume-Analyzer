@@ -1,15 +1,23 @@
+import { Target } from "lucide-react";
+
+import { Card } from "./ui/Card";
+import { CircularScore } from "./ui/CircularScore";
+
 type JobMatchScoreCardProps = {
   overallMatch: number;
 };
 
 export function JobMatchScoreCard({ overallMatch }: JobMatchScoreCardProps) {
   return (
-    <section className="panel analysis-card">
-      <p className="eyebrow">Overall Match</p>
-      <div className="score-row">
-        <span className="score-value">{overallMatch}</span>
-        <span className="score-label">%</span>
+    <Card className="analysis-card">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">Overall Match</p>
+          <h2>Role Fit</h2>
+        </div>
+        <Target aria-hidden="true" size={20} />
       </div>
-    </section>
+      <CircularScore label="Match" score={overallMatch} suffix="%" />
+    </Card>
   );
 }

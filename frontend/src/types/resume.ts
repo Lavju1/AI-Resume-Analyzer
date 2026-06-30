@@ -19,12 +19,23 @@ export type ResumeData = {
   projects: string[];
 };
 
+export type ATSCategoryScore = {
+  score: number;
+  max_score: number;
+  feedback: string;
+};
+
 export type ATSSectionScores = {
-  contact: number;
-  skills: number;
-  education: number;
-  experience: number;
-  projects: number;
+  contact_information: ATSCategoryScore;
+  professional_summary: ATSCategoryScore;
+  skills: ATSCategoryScore;
+  education: ATSCategoryScore;
+  experience: ATSCategoryScore;
+  projects: ATSCategoryScore;
+  keywords: ATSCategoryScore;
+  action_verbs: ATSCategoryScore;
+  quantified_achievements: ATSCategoryScore;
+  formatting: ATSCategoryScore;
 };
 
 export type ATSScore = {

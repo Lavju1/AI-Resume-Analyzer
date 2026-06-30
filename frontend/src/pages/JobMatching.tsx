@@ -1,9 +1,14 @@
 import { AxiosError } from "axios";
 import { type FormEvent, useEffect, useState } from "react";
+import { BriefcaseBusiness, FileSearch, Play, XCircle } from "lucide-react";
 
 import { AIAnalysisCard } from "../components/AIAnalysisCard";
 import { JobMatchListCard } from "../components/JobMatchListCard";
 import { JobMatchScoreCard } from "../components/JobMatchScoreCard";
+import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card";
+import { EmptyState } from "../components/ui/EmptyState";
+import { LoadingState } from "../components/ui/LoadingState";
 import { jobMatchingService } from "../services/jobMatchingService";
 import { resumeService } from "../services/resumeService";
 import type { JobMatchResponse } from "../types/jobMatching";
@@ -89,18 +94,35 @@ export function JobMatching() {
 
   return (
     <section className="upload-page">
-      <div className="panel upload-panel">
-        <p className="eyebrow">Job Matching</p>
-        <h2>Match Resume to Job</h2>
+      <Card className="upload-panel">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Job Matching</p>
+            <h2>Match Resume to Job</h2>
+          </div>
+          <BriefcaseBusiness aria-hidden="true" size={22} />
+        </div>
+        <p className="analysis-summary">
+          Select a saved resume, paste the job description, and compare skill
+          coverage with AI-assisted role-fit guidance.
+        </p>
 
         {isLoadingResumes ? (
-          <p className="analysis-summary">Loading resumes...</p>
+          <LoadingState title="Loading resumes" />
+        ) : null}
+
+        {error && (isLoadingResumes || resumes.length === 0) ? (
+          <p className="form-error">
+            <XCircle aria-hidden="true" size={16} />
+            <span>{error}</span>
+          </p>
         ) : null}
 
         {!isLoadingResumes && resumes.length === 0 ? (
-          <p className="empty-state">
-            Upload a resume before running job matching.
-          </p>
+          <EmptyState
+            description="Upload a resume first so the matcher has a profile to compare."
+            title="No resumes available"
+          />
         ) : null}
 
         {!isLoadingResumes && resumes.length > 0 ? (
@@ -131,23 +153,31 @@ export function JobMatching() {
               />
             </label>
 
-            {error ? <p className="form-error">{error}</p> : null}
+            {error ? (
+              <p className="form-error">
+                <XCircle aria-hidden="true" size={16} />
+                <span>{error}</span>
+              </p>
+            ) : null}
 
-            <button className="button button-primary" disabled={isMatching}>
-              {isMatching ? "Matching..." : "Run job match"}
-            </button>
+            <Button
+              disabled={isMatching}
+              icon={<Play aria-hidden="true" size={16} />}
+              isLoading={isMatching}
+            >
+              Run job match
+            </Button>
           </form>
         ) : null}
-      </div>
+      </Card>
 
       {isMatching ? (
-        <div className="panel analysis-card">
-          <p className="eyebrow">Analysis</p>
-          <h2>Matching resume...</h2>
-          <p className="analysis-summary">
-            Comparing your resume against the job description.
-          </p>
-        </div>
+        <Card className="analysis-card">
+          <LoadingState
+            description="Comparing resume skills, keywords, and AI role-fit signals."
+            title="Matching resume"
+          />
+        </Card>
       ) : null}
 
       {jobMatchResult ? (
@@ -156,25 +186,38 @@ export function JobMatching() {
           <JobMatchListCard
             items={jobMatchResult.matched_skills}
             title="Matched Skills"
+            tone="success"
           />
           <JobMatchListCard
             items={jobMatchResult.missing_skills}
             title="Missing Skills"
+            tone="warning"
           />
           <JobMatchListCard
             items={jobMatchResult.matched_keywords}
             title="Matched Keywords"
+            tone="success"
           />
           <JobMatchListCard
             items={jobMatchResult.missing_keywords}
             title="Missing Keywords"
+            tone="warning"
           />
           <AIAnalysisCard
             aiAnalysis={jobMatchResult.ai_analysis}
             eyebrow="AI Job Match"
-            title="AI Job Match Summary"
+            title="Role Fit Summary"
           />
         </div>
+      ) : !isMatching && !isLoadingResumes && resumes.length > 0 ? (
+        <Card className="analysis-card empty-analysis-card">
+          <FileSearch aria-hidden="true" size={28} />
+          <h2>Paste a job description to begin.</h2>
+          <p className="analysis-summary">
+            Results will appear here with match percentage, skill chips,
+            keyword coverage, and AI recommendations.
+          </p>
+        </Card>
       ) : null}
     </section>
   );

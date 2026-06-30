@@ -1,22 +1,22 @@
+import { Card } from "./ui/Card";
+import { TagList } from "./ui/TagList";
+
 type JobMatchListCardProps = {
   title: string;
   items: string[];
+  tone?: "neutral" | "success" | "warning";
 };
 
-export function JobMatchListCard({ title, items }: JobMatchListCardProps) {
+export function JobMatchListCard({
+  title,
+  items,
+  tone = "neutral",
+}: JobMatchListCardProps) {
   return (
-    <section className="panel analysis-card">
+    <Card className="analysis-card">
       <p className="eyebrow">Job Match</p>
       <h2>{title}</h2>
-      {items.length > 0 ? (
-        <ul className="match-list">
-          {items.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-      ) : (
-        <p className="muted-text">No items returned.</p>
-      )}
-    </section>
+      <TagList items={items} tone={tone} />
+    </Card>
   );
 }
