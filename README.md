@@ -40,14 +40,16 @@ Gemini.
 - Alembic
 - Pydantic
 
+### Database
+- PostgreSQL (Neon)
+
 ### AI
+- Google Gemini AI
 
-- Google Gemini API
-
-### Other
-
+### Deployment
 - Docker
-- GitHub Actions
+- Render
+- Vercel
 
 ## Project Structure
 
@@ -299,6 +301,11 @@ docker compose --profile test run --rm test
 - Interview Question Generator
 - pgvector Integration
 - Deployment
+
+## 🌐 Live Demo
+
+- **Frontend:** https://ai-resume-analyzer-chi-rouge.vercel.app
+- **Backend API (Swagger):** https://ai-resume-analyzer-ayti.onrender.com/docs
 
 ## Author
 
