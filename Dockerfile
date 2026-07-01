@@ -37,11 +37,17 @@ CMD ["pytest"]
 FROM base AS runtime
 
 ENV PATH="/opt/venv/bin:${PATH}"
+ENV UPLOAD_DIRECTORY=/app/uploads/resumes
 
 COPY --from=builder /opt/venv /opt/venv
+COPY alembic.ini ./
+COPY alembic ./alembic
+
+RUN mkdir -p /app/uploads/resumes \
+    && chown -R app:app /app/uploads
 
 EXPOSE 8000
 
 USER app
 
-CMD ["uvicorn", "ai_resume_analyzer.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn ai_resume_analyzer.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

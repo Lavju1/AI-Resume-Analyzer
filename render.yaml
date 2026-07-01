@@ -1,0 +1,57 @@
+services:
+  - type: web
+    name: ai-resume-analyzer-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    plan: starter
+    disk:
+      name: resume-uploads
+      mountPath: /app/uploads
+      sizeGB: 1
+    envVars:
+      - key: APP_ENV
+        value: "production"
+      - key: DEBUG
+        value: "false"
+      - key: LOG_LEVEL
+        value: "INFO"
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_POOL_SIZE
+        value: "5"
+      - key: DATABASE_MAX_OVERFLOW
+        value: "10"
+      - key: DATABASE_POOL_TIMEOUT
+        value: "30"
+      - key: DATABASE_POOL_RECYCLE
+        value: "1800"
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: "HS256"
+      - key: JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
+      - key: UPLOAD_DIRECTORY
+        value: "/app/uploads/resumes"
+      - key: MAX_UPLOAD_SIZE_MB
+        value: "10"
+      - key: ALLOWED_FILE_TYPES
+        value: '["application/pdf","application/vnd.openxmlformats-officedocument.wordprocessingml.document"]'
+      - key: REQUEST_ID_HEADER
+        value: "X-Request-ID"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: "gemini-1.5-flash"
+      - key: CORS_ALLOW_ORIGINS
+        sync: false
+      - key: CORS_ALLOW_ORIGIN_REGEX
+        value: 'https://.*\.vercel\.app'
+      - key: CORS_ALLOW_CREDENTIALS
+        value: "false"
+      - key: CORS_ALLOW_METHODS
+        value: '["GET","POST","PUT","PATCH","DELETE","OPTIONS"]'
+      - key: CORS_ALLOW_HEADERS
+        value: '["*"]'

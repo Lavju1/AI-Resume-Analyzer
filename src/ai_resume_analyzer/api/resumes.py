@@ -16,7 +16,11 @@ from fastapi import (
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ai_resume_analyzer.ai import AIAnalysisService
+from ai_resume_analyzer.ai import (
+    AIAnalysisService,
+    AIProviderConfigurationError,
+    AIProviderError,
+)
 from ai_resume_analyzer.auth.dependencies import get_current_user
 from ai_resume_analyzer.config import Settings, get_settings
 from ai_resume_analyzer.constants.uploads import (
@@ -94,7 +98,10 @@ def get_resume_feedback_service() -> ResumeFeedbackService:
 
 
 def get_ai_analysis_service() -> AIAnalysisService:
-    return AIAnalysisService()
+    try:
+        return AIAnalysisService()
+    except AIProviderError as exc:
+        raise _ai_provider_http_exception(exc) from exc
 
 
 def get_job_matching_service() -> JobMatchingService:
@@ -102,7 +109,10 @@ def get_job_matching_service() -> JobMatchingService:
 
 
 def get_ai_job_matching_service() -> AIJobMatchingService:
-    return AIJobMatchingService()
+    try:
+        return AIJobMatchingService()
+    except AIProviderError as exc:
+        raise _ai_provider_http_exception(exc) from exc
 
 
 def _normalize_original_filename(filename: str | None) -> str:
@@ -139,6 +149,19 @@ def _not_found_exception() -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="Resume not found",
+    )
+
+
+def _ai_provider_http_exception(exc: AIProviderError) -> HTTPException:
+    if isinstance(exc, AIProviderConfigurationError):
+        return HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AI provider is not configured",
+        )
+
+    return HTTPException(
+        status_code=status.HTTP_502_BAD_GATEWAY,
+        detail="AI provider failed to analyze the resume",
     )
 
 
@@ -300,12 +323,17 @@ async def upload_resume(
         extracted_data=extracted_data,
         ats_score=ats_score,
     )
-    ai_analysis = await ai_analysis_service.analyze_resume(
-        parsed_text=parsed_text,
-        extracted_data=extracted_data,
-        ats_score=ats_score,
-        feedback=feedback,
-    )
+    try:
+        ai_analysis = await ai_analysis_service.analyze_resume(
+            parsed_text=parsed_text,
+            extracted_data=extracted_data,
+            ats_score=ats_score,
+            feedback=feedback,
+        )
+    except AIProviderError as exc:
+        await resume_repository.session.rollback()
+        _remove_file(stored_upload.storage_path)
+        raise _ai_provider_http_exception(exc) from exc
 
     try:
         resume = await resume_repository.create_resume(
@@ -398,12 +426,15 @@ async def match_resume_to_job(
         resume_data=resume_data,
         job_description=job_description,
     )
-    ai_analysis = await ai_job_matching_service.analyze_job_match(
-        parsed_text=parsed_text,
-        resume_data=resume_data,
-        job_description=job_description,
-        job_match=job_match,
-    )
+    try:
+        ai_analysis = await ai_job_matching_service.analyze_job_match(
+            parsed_text=parsed_text,
+            resume_data=resume_data,
+            job_description=job_description,
+            job_match=job_match,
+        )
+    except AIProviderError as exc:
+        raise _ai_provider_http_exception(exc) from exc
 
     return ResumeJobMatchResponse(
         overall_match=job_match.overall_match,

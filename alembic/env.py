@@ -16,6 +16,10 @@ from ai_resume_analyzer.config import get_settings
 from ai_resume_analyzer.database.base import Base
 from ai_resume_analyzer.database.models import resume  # noqa: F401
 from ai_resume_analyzer.database.models import user  # noqa: F401
+from ai_resume_analyzer.database.url import (
+    get_async_database_url,
+    get_asyncpg_connect_args,
+)
 
 config = context.config
 
@@ -25,7 +29,7 @@ if config.config_file_name is not None:
 settings = get_settings()
 config.set_main_option(
     "sqlalchemy.url",
-    settings.database_url.replace("%", "%%"),
+    get_async_database_url(settings.database_url).replace("%", "%%"),
 )
 
 target_metadata = Base.metadata
@@ -63,6 +67,7 @@ async def run_async_migrations() -> None:
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=get_asyncpg_connect_args(settings.database_url),
     )
 
     async with connectable.connect() as connection:

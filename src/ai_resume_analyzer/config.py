@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ai_resume_analyzer.constants.logging import VALID_LOG_LEVELS
@@ -61,6 +61,7 @@ class Settings(BaseSettings):
             "http://127.0.0.1:5174",
         ]
     )
+    cors_allow_origin_regex: str | None = r"https://.*\.vercel\.app"
     cors_allow_credentials: bool = False
     cors_allow_methods: list[str] = Field(
         default_factory=lambda: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
@@ -135,6 +136,23 @@ class Settings(BaseSettings):
             msg = "GEMINI_MODEL must not be empty"
             raise ValueError(msg)
         return normalized
+
+    @model_validator(mode="after")
+    def validate_production_settings(self) -> "Settings":
+        if self.app_env != "production":
+            return self
+
+        if self.debug:
+            msg = "DEBUG must be false in production"
+            raise ValueError(msg)
+        if self.jwt_secret_key == "change-me-in-production":
+            msg = "JWT_SECRET_KEY must be changed in production"
+            raise ValueError(msg)
+        if self.gemini_api_key is None:
+            msg = "GEMINI_API_KEY must be configured in production"
+            raise ValueError(msg)
+
+        return self
 
 
 @lru_cache
