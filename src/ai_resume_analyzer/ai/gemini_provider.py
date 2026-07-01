@@ -2,7 +2,7 @@ import re
 from collections.abc import Awaitable, Callable
 from importlib import import_module
 from types import ModuleType
-from typing import cast
+from typing import Any, cast
 
 from ai_resume_analyzer.ai.base import BaseAIProvider
 from ai_resume_analyzer.ai.exceptions import (
@@ -57,8 +57,8 @@ class GeminiProvider(BaseAIProvider):
 
     async def _generate_content(self, prompt: str) -> object:
         genai = self._load_genai_module()
-        client_factory = cast(Callable[..., object], genai.Client)
-        client = client_factory(api_key=self.api_key)
+        client_factory = cast(Callable[..., Any], genai.Client)
+        client: Any = client_factory(api_key=self.api_key)
         async_client = client.aio
         models = async_client.models
         generate_content = cast(
