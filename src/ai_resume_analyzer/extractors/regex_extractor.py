@@ -48,8 +48,7 @@ MULTI_WORD_SKILLS = {
 MULTI_WORD_SKILL_PATTERN = re.compile(
     r"\b("
     + "|".join(
-        re.escape(skill)
-        for skill in sorted(MULTI_WORD_SKILLS, key=len, reverse=True)
+        re.escape(skill) for skill in sorted(MULTI_WORD_SKILLS, key=len, reverse=True)
     )
     + r")\b",
     re.IGNORECASE,

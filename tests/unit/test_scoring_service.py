@@ -55,7 +55,10 @@ def test_weighted_score_penalizes_missing_quantified_achievements() -> None:
 
     assert score.overall_score < 100
     assert score.section_scores.quantified_achievements.score == 0
-    assert "quantified achievements" in score.section_scores.quantified_achievements.feedback
+    assert (
+        "quantified achievements"
+        in score.section_scores.quantified_achievements.feedback
+    )
     assert "quantified_achievements" in score.missing_sections
 
 

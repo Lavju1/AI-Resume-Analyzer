@@ -211,7 +211,9 @@ class ResumeScoringService:
         parsed_text: str,
     ) -> ATSCategoryScore:
         max_score = CATEGORY_WEIGHTS["action_verbs"]
-        action_verbs = self._extract_action_verbs(self._combined_text(data, parsed_text))
+        action_verbs = self._extract_action_verbs(
+            self._combined_text(data, parsed_text)
+        )
         verb_count = len(action_verbs)
 
         if verb_count >= 5:

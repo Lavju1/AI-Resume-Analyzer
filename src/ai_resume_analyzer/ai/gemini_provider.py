@@ -57,13 +57,13 @@ class GeminiProvider(BaseAIProvider):
 
     async def _generate_content(self, prompt: str) -> object:
         genai = self._load_genai_module()
-        client_factory = cast(Callable[..., object], getattr(genai, "Client"))
+        client_factory = cast(Callable[..., object], genai.Client)
         client = client_factory(api_key=self.api_key)
-        async_client = getattr(client, "aio")
-        models = getattr(async_client, "models")
+        async_client = client.aio
+        models = async_client.models
         generate_content = cast(
             Callable[..., Awaitable[object]],
-            getattr(models, "generate_content"),
+            models.generate_content,
         )
 
         return await generate_content(model=self.model, contents=prompt)

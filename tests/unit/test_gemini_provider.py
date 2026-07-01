@@ -4,8 +4,7 @@ from ai_resume_analyzer.ai.gemini_provider import GeminiProvider
 def test_parse_response_text_splits_markdown_sections() -> None:
     provider = GeminiProvider(api_key="test-key", model="test-model")
 
-    analysis = provider._parse_response_text(
-        """
+    analysis = provider._parse_response_text("""
         ### **Professional Summary**
         Experienced backend engineer with FastAPI experience.
 
@@ -21,8 +20,7 @@ def test_parse_response_text_splits_markdown_sections() -> None:
         ### Resume Improvement Recommendations
         1. Add metrics to experience bullets
         2. Tailor keywords for each role
-        """
-    )
+        """)
 
     assert analysis.summary == "Experienced backend engineer with FastAPI experience."
     assert analysis.strengths == [
@@ -39,8 +37,7 @@ def test_parse_response_text_splits_markdown_sections() -> None:
 def test_parse_response_text_supports_alternate_headings() -> None:
     provider = GeminiProvider(api_key="test-key", model="test-model")
 
-    analysis = provider._parse_response_text(
-        """
+    analysis = provider._parse_response_text("""
         **Summary**
         Strong technical foundation.
 
@@ -49,8 +46,7 @@ def test_parse_response_text_supports_alternate_headings() -> None:
 
         **Recommendations**
         - Add more project detail
-        """
-    )
+        """)
 
     assert analysis.summary == "Strong technical foundation."
     assert analysis.strengths == ["Python"]
@@ -61,11 +57,9 @@ def test_parse_response_text_supports_alternate_headings() -> None:
 def test_parse_response_text_uses_empty_lists_for_missing_sections() -> None:
     provider = GeminiProvider(api_key="test-key", model="test-model")
 
-    analysis = provider._parse_response_text(
-        """
+    analysis = provider._parse_response_text("""
         Summary: Solid resume for an entry-level role.
-        """
-    )
+        """)
 
     assert analysis.summary == "Solid resume for an entry-level role."
     assert analysis.strengths == []
@@ -76,8 +70,7 @@ def test_parse_response_text_uses_empty_lists_for_missing_sections() -> None:
 def test_parse_response_text_supports_job_match_headings() -> None:
     provider = GeminiProvider(api_key="test-key", model="test-model")
 
-    analysis = provider._parse_response_text(
-        """
+    analysis = provider._parse_response_text("""
         Summary
         Good fit for the frontend role.
 
@@ -89,8 +82,7 @@ def test_parse_response_text_supports_job_match_headings() -> None:
 
         Job Match Recommendations
         - Add role-specific frontend metrics
-        """
-    )
+        """)
 
     assert analysis.summary == "Good fit for the frontend role."
     assert analysis.strengths == ["React project experience"]
