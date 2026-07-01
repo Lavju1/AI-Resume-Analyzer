@@ -39,3 +39,7 @@ coverage.xml
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Uploaded resumes
+uploads/
+uploads/resumes/
