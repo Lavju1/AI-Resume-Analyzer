@@ -15,9 +15,15 @@ DEFAULT_AI_SUMMARY = "No AI summary was returned."
 SECTION_HEADINGS = {
     "professional summary": "summary",
     "summary": "summary",
+    "resume strengths for this role": "strengths",
+    "strengths for this role": "strengths",
     "top strengths": "strengths",
     "strengths": "strengths",
+    "areas for improvement": "weaknesses",
+    "missing qualifications": "weaknesses",
     "weaknesses": "weaknesses",
+    "job match recommendations": "recommendations",
+    "recommendations to improve the resume": "recommendations",
     "resume improvement recommendations": "recommendations",
     "recommendations": "recommendations",
 }

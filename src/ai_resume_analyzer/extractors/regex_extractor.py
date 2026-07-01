@@ -39,6 +39,23 @@ SKILL_SEPARATORS = re.compile(r"[,;|]|(?:\s+[•]\s+)")
 LEADING_BULLET_PATTERN = re.compile(r"^[\s\-*•]+")
 
 
+MULTI_WORD_SKILLS = {
+    "artificial intelligence": "Artificial Intelligence",
+    "data science": "Data Science",
+    "machine learning": "Machine Learning",
+    "web development": "Web Development",
+}
+MULTI_WORD_SKILL_PATTERN = re.compile(
+    r"\b("
+    + "|".join(
+        re.escape(skill)
+        for skill in sorted(MULTI_WORD_SKILLS, key=len, reverse=True)
+    )
+    + r")\b",
+    re.IGNORECASE,
+)
+
+
 class RegexResumeExtractor(BaseResumeExtractor):
     def extract(self, text: str) -> ResumeData:
         sections = self._extract_sections(text)
@@ -130,11 +147,38 @@ class RegexResumeExtractor(BaseResumeExtractor):
             return []
 
         if section == "skills":
-            return [
-                item.strip()
-                for item in SKILL_SEPARATORS.split(stripped_value)
-                if item.strip()
-            ]
+            skills: list[str] = []
+            for item in SKILL_SEPARATORS.split(stripped_value):
+                skills.extend(self._split_skill_value(item))
+            return skills
+
+        return [stripped_value]
+
+    def _split_skill_value(self, value: str) -> list[str]:
+        stripped_value = value.strip()
+        if not stripped_value:
+            return []
+
+        normalized_value = re.sub(r"\s+", " ", stripped_value.lower()).strip()
+        if normalized_value in MULTI_WORD_SKILLS:
+            return [MULTI_WORD_SKILLS[normalized_value]]
+
+        matches = [
+            MULTI_WORD_SKILLS[match.group(0).lower()]
+            for match in MULTI_WORD_SKILL_PATTERN.finditer(stripped_value)
+        ]
+        if not matches:
+            return [stripped_value]
+
+        remaining_text = MULTI_WORD_SKILL_PATTERN.sub(" ", stripped_value)
+        remaining_text = re.sub(
+            r"\b(?:and|or)\b",
+            " ",
+            remaining_text,
+            flags=re.IGNORECASE,
+        )
+        if not remaining_text.strip():
+            return matches
 
         return [stripped_value]
 

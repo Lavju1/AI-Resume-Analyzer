@@ -71,3 +71,28 @@ def test_parse_response_text_uses_empty_lists_for_missing_sections() -> None:
     assert analysis.strengths == []
     assert analysis.weaknesses == []
     assert analysis.recommendations == []
+
+
+def test_parse_response_text_supports_job_match_headings() -> None:
+    provider = GeminiProvider(api_key="test-key", model="test-model")
+
+    analysis = provider._parse_response_text(
+        """
+        Summary
+        Good fit for the frontend role.
+
+        Resume Strengths for This Role
+        - React project experience
+
+        Missing Qualifications
+        - Limited Tailwind examples
+
+        Job Match Recommendations
+        - Add role-specific frontend metrics
+        """
+    )
+
+    assert analysis.summary == "Good fit for the frontend role."
+    assert analysis.strengths == ["React project experience"]
+    assert analysis.weaknesses == ["Limited Tailwind examples"]
+    assert analysis.recommendations == ["Add role-specific frontend metrics"]
